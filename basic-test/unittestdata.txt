@@ -1,5 +1,5 @@
 add 1
 subtract 2
-divide 3
-multiply 4
+divide 2
+multiply 7
 apply 5
