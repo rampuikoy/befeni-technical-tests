@@ -32,7 +32,32 @@
         fclose($myfile);
     }
 
+    function main(&$first, &$num, &$opt)
+    {
+        $i = 0;
+        foreach ($opt as $item) {
+            switch ($item) {
+                case 'add':
+                    $first += $num[$i];
+                    break;
+                case 'multiply':
+                    $first *= $num[$i];
+                    break;
+                case 'subtract':
+                    $first -= $num[$i];
+                    break;
+                case 'divide':
+                    $first /= $num[$i];
+                    break;
+            }
+            $i +=1;
+        }
+        echo "Total is ".$first;
+    }
+
     prepare_data_from_file($number, $operator, $start);
+
+    main($start, $number, $operator);
 
     ?>
 
