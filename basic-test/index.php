@@ -24,11 +24,24 @@
         $opt = [];
         $first = 0;
         $assert = prepare_data_from_file($num, $opt, $first, "unittestdata.txt");
-        if($num[0] == 1 && $num[3] == 4 && $opt[0] =='add' && $opt[3] == 'multiply' && $first == 5){
+        if($num[0] == 1 && $num[3] == 7 && $opt[0] =='add' && $opt[3] == 'multiply' && $first == 5){
             echo 'prepare data from file function test is pass!! </br>';
             
         }else {
             echo 'prepare data from file function test is error </br>';
+        }
+    }
+
+    function main_test(){
+        $num = [];
+        $opt = [];
+        $first = 0;
+        $assert = prepare_data_from_file($num, $opt, $first, "unittestdata.txt");
+        main($first, $num, $opt);
+        if($first == 14){
+            echo 'main function test is pass!! </br>';
+        }else {
+            echo 'main test is error </br>';
         }
     }
 
@@ -75,15 +88,17 @@
             }
             $i +=1;
         }
-        echo "</br> Total is ".$first;
     }
-
+    echo '-------------------------TEST------------------------------------- </br>';
     split_text_test();
     prepare_data_from_file_test();
+    main_test();
 
+    echo '-----------------------------Real Result-------------------------- </br>';
     prepare_data_from_file($number, $operator, $start, "datafile.txt");
 
     main($start, $number, $operator);
+    echo "</br> Total is ".$start;
 
     ?>
 
