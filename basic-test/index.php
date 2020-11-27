@@ -9,6 +9,16 @@
     $number = [];
     $operator = [];
 
+    function split_text_test(){
+        $right_text = "add 2";
+        $get = split_text($right_text);
+        if($get[0] == 'add' && $get[1] == '2'){
+            echo 'Split text function test is pass!! </br>';
+        }else {
+            echo 'Split text function test is error </br>';
+        }
+    }
+
     function split_text($text)
     {
         return explode(" ", $text);
@@ -52,8 +62,10 @@
             }
             $i +=1;
         }
-        echo "Total is ".$first;
+        echo "</br> Total is ".$first;
     }
+
+    split_text_test();
 
     prepare_data_from_file($number, $operator, $start);
 
