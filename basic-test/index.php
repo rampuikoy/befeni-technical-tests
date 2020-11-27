@@ -11,11 +11,24 @@
 
     function split_text_test(){
         $right_text = "add 2";
-        $get = split_text($right_text);
-        if($get[0] == 'add' && $get[1] == '2'){
+        $assert = split_text($right_text);
+        if($assert[0] == 'add' && $assert[1] == '2'){
             echo 'Split text function test is pass!! </br>';
         }else {
             echo 'Split text function test is error </br>';
+        }
+    }
+
+    function prepare_data_from_file_test(){
+        $num = [];
+        $opt = [];
+        $first = 0;
+        $assert = prepare_data_from_file($num, $opt, $first, "unittestdata.txt");
+        if($num[0] == 1 && $num[3] == 4 && $opt[0] =='add' && $opt[3] == 'multiply' && $first == 5){
+            echo 'prepare data from file function test is pass!! </br>';
+            
+        }else {
+            echo 'prepare data from file function test is error </br>';
         }
     }
 
@@ -23,10 +36,10 @@
     {
         return explode(" ", $text);
     }
-
-    function prepare_data_from_file(&$num, &$opt, &$first)
+    
+    function prepare_data_from_file(&$num, &$opt, &$first, $file)
     {
-        $myfile = fopen("datafile.txt", "r") or die("Unable to open file!");
+        $myfile = fopen($file, "r") or die("Unable to open file!");
 
         while (!feof($myfile)) {
             $split_str = split_text((fgets($myfile)));
@@ -66,8 +79,9 @@
     }
 
     split_text_test();
+    prepare_data_from_file_test();
 
-    prepare_data_from_file($number, $operator, $start);
+    prepare_data_from_file($number, $operator, $start, "datafile.txt");
 
     main($start, $number, $operator);
 
