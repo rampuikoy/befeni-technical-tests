@@ -3,6 +3,7 @@
 use App\Models\ShirtOrder;
 use App\ShirtOrder\ShirtOrderRepository;
 use App\Traits\CacheTrait;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 
 class EloquentRepository implements ShirtOrderRepository
@@ -62,6 +63,11 @@ class EloquentRepository implements ShirtOrderRepository
         }
         $shirt->delete();
         return null;
+    }
+
+    public function search(string $query = ''): Collection
+    {
+
     }
 
     public function updateCacheById($id)
