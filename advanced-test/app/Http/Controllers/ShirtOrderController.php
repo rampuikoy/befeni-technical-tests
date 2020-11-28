@@ -46,7 +46,7 @@ class ShirtOrderController extends Controller
             'wrist_size',
         );
 
-        $shirt = $this->shirtOrderRepo->updateById($data, $id);
+        $shirt = $this->shirtOrderRepo->updateById($id, $data);
 
         return $this->successResponse($shirt);
     }
