@@ -20,6 +20,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 Route::group([
+    'middleware' => 'json.response',
     'prefix' => 'shirt-order'
 ], function () {
     Route::get('/{id}', [ShirtOrderController::class, 'getById']);
