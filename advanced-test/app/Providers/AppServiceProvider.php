@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\ShirtOrder;
+use App\Observers\ShirtOrderObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,7 +15,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->bind(
+            'App\ShirtOrder\ShirtOrderRepository',
+            'App\ShirtOrder\EloquentRepository'
+        );
     }
 
     /**
@@ -23,6 +28,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        ShirtOrder::observe(ShirtOrderObserver::class);
     }
 }
