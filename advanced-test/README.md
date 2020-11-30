@@ -1,3 +1,9 @@
+## How to run
+- run `cp env-example .env`
+- config `.env` [IPV4 = 192.168.1.102] to your IPV4 this is for test resource
+- run `docker-composer up -d --build`
+
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
 
 <p align="center">
