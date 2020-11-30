@@ -23,6 +23,23 @@ trait CacheTrait
         return $getkey;
     }
 
+    public function getTwoArrayKey($prefix, $array1, $array2)
+    {
+        $prefix = strtoupper($prefix);
+        $getkey = $prefix . "."."WHERE";
+        if(!is_null($array1)){
+            foreach($array1 as $key=>$value){
+                $getkey = $getkey.$key.".".$value.".";
+            }
+        }
+        if(!is_null($array2)){
+            foreach($array2 as $key=>$value){
+                $getkey = $getkey.$key.".".$value.".";
+            }
+        }
+        return $getkey;
+    }
+
 
     public function getTime($time)
     {
