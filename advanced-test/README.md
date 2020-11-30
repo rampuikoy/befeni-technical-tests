@@ -1,8 +1,9 @@
 ## How to run
 - run `cp env-example .env`
 - config `.env` [IPV4 = 192.168.1.102] to your IPV4 this is for test resource
-- run `docker-composer up -d --build`
+- run `docker-compose up -d --build`
 - run `docker exec -it advanced-test_php_1 bash`
+- In docker container run `composer install`
 - In docker container run `php artisan migrate:fresh --seed` to seeding mock resource
 
 
