@@ -19,6 +19,16 @@ class AppServiceProvider extends ServiceProvider
             'App\ShirtOrder\ShirtOrderRepository',
             'App\ShirtOrder\EloquentRepository'
         );
+
+        $this->app->bind(
+            'App\ShirtOrder\Datasource\DataSourceRepository',
+            'App\ShirtOrder\Datasource\EloquentRepository'
+        );
+
+        $this->app->bind(
+            'App\ShirtOrder\TestResource\TestResourceRepository',
+            'App\ShirtOrder\TestResource\EloquentRepository'
+        );
     }
 
     /**
