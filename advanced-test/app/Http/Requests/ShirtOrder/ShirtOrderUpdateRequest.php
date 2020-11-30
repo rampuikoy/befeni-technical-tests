@@ -24,6 +24,7 @@ class ShirtOrderUpdateRequest extends FormRequest
     public function rules()
     {
         return [
+            'id' => 'required|integer',
             'customer_id' => 'integer',
             'fabric_id' => 'integer',
             'collar_size' => 'integer',
