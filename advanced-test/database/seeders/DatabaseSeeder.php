@@ -14,5 +14,6 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         \App\Models\ShirtOrder::factory(100)->create();
+        $this->call(DataSourceSeeder::class);
     }
 }
