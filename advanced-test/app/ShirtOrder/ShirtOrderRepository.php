@@ -8,48 +8,55 @@ use Illuminate\Database\Eloquent\Collection;
 interface ShirtOrderRepository
 {
     /**
-     * create new shirt
+     * get shirt order from several data source
      *
-     * @param array $data
+     * @param $tag
+     * @param array $body
+     * @param array $header
      *
-     * @return object|null
+     * @return null
      */
-    public function store(array $data);
+    public function receive($tag, $additional = [], $header = ['Accept' => 'application/json','Accept-Encoding' => 'gzip, deflate, br']);
 
     /**
-     * update shirt by id
+     * get shirt order from several data source
      *
-     * @param $id
-     * @param array $data
+     * @param $tag
+     * @param array $body
+     * @param array $header
      *
-     * @return object
+     * @return null
      */
-    public function updateById($id, array $data);
+    public function create($tag, $additional = [], $header = ['Accept' => 'application/json', 'Content-Type' => 'application/json','Accept-Encoding' => 'gzip, deflate, br']);
 
     /**
-     * get shirt by id
+     * get shirt order from several data source
      *
-     * @param $id
+     * @param $tag
+     * @param array $body
+     * @param array $header
      *
-     * @return object
+     * @return null
      */
-    public function getById($id);
+    public function update($tag, $additional = [], $header = ['Accept' => 'application/json', 'Content-Type' => 'application/json','Accept-Encoding' => 'gzip, deflate, br']);
 
     /**
-     * delete shirt order by id
+     * get shirt order from several data source
      *
-     * @param $id
+     * @param $tag
+     * @param array $body
+     * @param array $header
      *
-     * @return object|null
+     * @return null
      */
-    public function DeleteById($id);
+    public function delete($tag, $additional = [], $header = ['Accept' => 'application/json','Accept-Encoding' => 'gzip, deflate, br']);
 
-     /**
+    /**
      * search shirt order
      *
      * @param $query
      *
      * @return Collection
      */
-    public function search (string $query = ''): Collection;
+    //public function search (string $query = ''): Collection;
 }

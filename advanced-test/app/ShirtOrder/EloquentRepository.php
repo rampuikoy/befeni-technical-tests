@@ -1,10 +1,16 @@
 <?php
 
+namespace App\ShirtOrder;
+
 use App\Models\ShirtOrder;
+use App\ShirtOrder\Datasource\DataSourceRepository;
 use App\ShirtOrder\ShirtOrderRepository;
 use App\Traits\CacheTrait;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Elasticsearch\Client;
+use Exception;
+use GrahamCampbell\ResultType\Success;
 
 class EloquentRepository implements ShirtOrderRepository
 {
@@ -14,66 +20,196 @@ class EloquentRepository implements ShirtOrderRepository
     const CACHE_KEY             = 'SHIRT_ORDER';
     const MINUTE_CACHE          = 1;
 
-    public function __construct(ShirtOrder $shirt)
+
+    protected $dataRepo;
+    private $elasticsearch;
+
+    public function __construct(ShirtOrder $shirt, DataSourceRepository $dataRepo, Client $elasticsearch)
     {
-        $this->keyById = self::CACHE_KEY . ".ID";
+        $this->dataRepo = $dataRepo;
+        $this->keyBy = self::CACHE_KEY . ".TAG.TYPE";
         $this->time = $this->getTime(self::MINUTE_CACHE);
         $this->shirt        = $shirt;
+        $this->elasticsearch = $elasticsearch;
     }
 
-    public function store(array $data)
+    public function create($tag, $additional = [], $header = ['Accept' => 'application/json', 'Content-Type' => 'application/json', 'Accept-Encoding' => 'gzip, deflate, br'])
     {
-        $shirt  = $this->shirt::create($data);
+        $key = $this->getTwoArrayKey(self::CACHE_KEY . ".TAG." . $tag . "TYPE.CREATE", $additional, $header);
 
-        if (is_null($shirt)) {
-            return null;
-        }
+        $source = $this->dataRepo->getByTagType($tag, 'create');
 
-        return $this->getById($shirt->id);
-    }
-
-    public function getById($id)
-    {
-        $key = $this->getCacheKey($this->keyById, $id);
-        $shirt = Cache::remember($key, $this->time, function () use ($id) {
-            $shirt = ShirtOrder::find($id);
-            // $shirt->load('relation'); ---- use for load relation with shirt order.
-
-            return $shirt;
+        $response = Cache::remember($key, $this->time, function () use ($source, $additional, $header) {
+            $response = $this->getResponse($source, $additional, $header);
+            return $response;
         });
 
-        return $shirt;
+        return $response;
     }
 
-    public function updateById($id, array $data)
+    public function update($tag, $additional = [], $header = ['Accept' => 'application/json', 'Content-Type' => 'application/json', 'Accept-Encoding' => 'gzip, deflate, br'])
     {
-        $shirt = $this->getById($id);
-        if(is_null($shirt)){
-            return null;
+        $key = $this->getTwoArrayKey(self::CACHE_KEY . ".TAG." . $tag . "TYPE.UPDATE", $additional, $header);
+
+        $source = $this->dataRepo->getByTagType($tag, 'update');
+
+        $response = Cache::remember($key, $this->time, function () use ($tag, $source, $additional, $header) {
+            $response = $this->getResponse($source, $additional, $header);
+            return $response;
+        });
+
+        $updateAll = $this->updateModelToAllDataSource($tag, $additional, $header);
+
+        return [$response, $updateAll];
+    }
+
+    public function delete($tag, $additional = [], $header = ['Accept' => 'application/json', 'Accept-Encoding' => 'gzip, deflate, br'])
+    {
+        $key = $this->getTwoArrayKey(self::CACHE_KEY . ".TAG." . $tag . "TYPE.DELETE", $additional, $header);
+
+        $source = $this->dataRepo->getByTagType($tag, 'delete');
+
+        $response = Cache::remember($key, $this->time, function () use ($source, $additional, $header) {
+            $response = $this->getResponse($source, $additional, $header);
+            return $response;
+        });
+
+        $deleteAll = $this->deleteModelToAllDataSource($tag, $additional, $header);
+
+        return [$response, $deleteAll];
+    }
+
+    public function receive($tag, $filter = [], $additional = [], $header = ['Accept' => 'application/json', 'Accept-Encoding' => 'gzip, deflate, br'])
+    {
+
+        $key = $this->getTwoArrayKey(self::CACHE_KEY . ".TAG." . $tag . "TYPE.RECEIVE", $additional, $header);
+
+        $source = $this->dataRepo->getByTagType($tag, 'receive');
+
+        $response = Cache::remember($key, $this->time, function () use ($tag, $source, $additional, $header) {
+            $response = $this->getResponse($source, $additional, $header);
+            $this->saved($tag, $response['result']);
+            return $response;
+        });
+
+        if (is_null($filter)) {
+
+            return $response;
         }
-        $shirt->update($data);
-        return $this->updateCacheById($shirt->id);
+
+        return  $this->search($tag, $filter);
     }
 
-    public function DeleteById($id)
+    public function getResponse($source, $additional, $header)
     {
-        $shirt = $this->getById($id);
-        if(is_null($shirt)){
-            return null;
+        switch ($source->method) {
+            case 'post':
+                $response = Http::withHeaders($header)->post($source->url, $additional);
+                break;
+            case 'get':
+                $response = Http::withHeaders($header)->get($source->url, $additional);
+                break;
+            case 'put':
+                $response = Http::withHeaders($header)->put($source->url, $additional);
+                break;
+            case 'patch':
+                $response = Http::withHeaders($header)->patch($source->url, $additional);
+                break;
+            case 'delete':
+                $response = Http::withHeaders($header)->delete($source->url, $additional);
+                break;
         }
-        $shirt->delete();
-        return null;
+        return $response->json();
     }
 
-    public function search(string $query = ''): Collection
+    public function search($tag, $condition)
     {
-
+        $items = $this->searchOnElasticsearch($tag, $condition);
+        return $this->buildCollection($items);
     }
 
-    public function updateCacheById($id)
+    private function searchOnElasticsearch($tag, $condition): array
     {
-        $key = $this->getCacheKey($this->keyById, $id);
-        Cache::forget($key);
-        return $this->getById($id);
+
+        $items = $this->elasticsearch->search([
+            'index' => 'shirt_order_' . $tag,
+            'body' => [
+                "query" => [
+                    "match" => $condition
+                ]
+            ]
+        ]);
+
+        return $items;
+    }
+
+    private function buildCollection(array $items)
+    {
+        $data = [];
+        foreach ($items['hits']['hits'] as $item) {
+            $data[] = $item['_source'];
+        }
+        return $data;
+    }
+
+    public function saved($tag, $result)
+    {
+        foreach ($result as $items) {
+            $this->elasticsearch->index([
+                'index' => 'shirt_order_' . $tag,
+                'id' => 1,
+                'body' => $items,
+            ]);
+        }
+    }
+
+    public function deleted($tag)
+    {
+        $this->elasticsearch->delete([
+            'index' => 'shirt_order_' . $tag,
+            'id' => 'FSBzFHYBVdRe3uk1dsse',
+        ]);
+    }
+
+    public function updateModelToAllDataSource($tag, $additional, $header)
+    {
+        $source =  $this->dataRepo->getAllTagUpdate($tag);
+        $succes = [];
+        $error = [];
+        foreach ($source as $item) {
+            $key = $this->getTwoArrayKey(self::CACHE_KEY . ".TAG." . $tag . "TYPE.UPDATE", $additional, $header);
+
+            try {
+                $response = Cache::remember($key, $this->time, function () use ($item, $additional, $header) {
+                    $response = $this->getResponse($item, $additional, $header);
+                    return $response;
+                });
+                $succes[] = $item;
+            } catch (Exception $e) {
+                $error[] = $item;
+            }
+        }
+        return ["succes item" => $succes, "error item" => $error];
+    }
+
+    public function deleteModelToAllDataSource($tag, $additional, $header)
+    {
+        $source =  $this->dataRepo->getAllTagDelete($tag);
+        $succes = [];
+        $error = [];
+        foreach ($source as $item) {
+            $key = $this->getTwoArrayKey(self::CACHE_KEY . ".TAG." . $tag . "TYPE.DELETE", $additional, $header);
+
+            try {
+                $response = Cache::remember($key, $this->time, function () use ($item, $additional, $header) {
+                    $response = $this->getResponse($item, $additional, $header);
+                    return $response;
+                });
+                $succes[] = $item;
+            } catch (Exception $e) {
+                $error[] = $item;
+            }
+        }
+        return ["succes item" => $succes, "error item" => $error];
     }
 }
