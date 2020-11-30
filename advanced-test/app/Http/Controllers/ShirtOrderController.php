@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ShirtOrder\ShirtOrderInsertRequest;
-use App\Http\Requests\ShirtOrder\ShirtOrderUpdateRequest;
+use App\Http\Requests\ShirtOrder\ShirtOrderApiRequest;
 use App\ShirtOrder\ShirtOrderRepository;
 use App\Traits\CoreResponseTrait;
 use Illuminate\Http\Request;
@@ -19,54 +18,69 @@ class ShirtOrderController extends Controller
         $this->shirtOrderRepo = $shirtOrderRepo;
     }
 
-    public function insert(ShirtOrderInsertRequest $request)
+    public function receive(ShirtOrderApiRequest $request)
     {
-        $data = $request->only(
-            'customer_id',
-            'fabric_id',
-            'collar_size',
-            'chest_size',
-            'waist_size',
-            'wrist_size',
-        );
+        $additional = $request->additional;
 
-        $shirt = $this->shirtOrderRepo->store($data);
+        $tag = $request->tag;
 
-        return $this->successResponse($shirt);
+        $filter = $request->filter;
+
+        if ($request->has('send_header')) {
+            $header = $request->send_header;
+            $response = $this->shirtOrderRepo->receive($tag, $filter, $additional, $header);
+        } else {
+            $response = $this->shirtOrderRepo->receive($tag, $filter, $additional);
+        }
+
+        return $response;
     }
 
-    public function updateById(ShirtOrderUpdateRequest $request, $id)
+    public function delete(ShirtOrderApiRequest $request)
     {
-        $data = $request->only(
-            'customer_id',
-            'fabric_id',
-            'collar_size',
-            'chest_size',
-            'waist_size',
-            'wrist_size',
-        );
+        $additional = $request->additional;
 
-        $shirt = $this->shirtOrderRepo->updateById($id, $data);
+        $tag = $request->tag;
 
-        return $this->successResponse($shirt);
+        if ($request->has('send_header')) {
+            $header = $request->send_header;
+            $response = $this->shirtOrderRepo->delete($tag, $additional, $header);
+        } else {
+            $response = $this->shirtOrderRepo->delete($tag, $additional);
+        }
+
+        return $response;
     }
 
-    public function getById($id)
+    public function update(ShirtOrderApiRequest $request)
     {
-        $shirt = $this->shirtOrderRepo->getById($id);
+        $additional = $request->additional;
 
-        return $this->successResponse($shirt);
+        $tag = $request->tag;
+
+        if ($request->has('send_header')) {
+            $header = $request->send_header;
+            $response = $this->shirtOrderRepo->update($tag, $additional, $header);
+        } else {
+            $response = $this->shirtOrderRepo->update($tag, $additional);
+        }
+
+        return $response;
     }
 
-    public function deleteById($id)
+    public function create(ShirtOrderApiRequest $request)
     {
-        $shirt = $this->shirtOrderRepo->deleteById($id);
+        $additional = $request->additional;
 
-        return $this->successResponse($shirt);
-    }
+        $tag = $request->tag;
 
-    public function search()
-    {
-        //
+        if ($request->has('send_header')) {
+            $header = $request->send_header;
+            $response = $this->shirtOrderRepo->create($tag, $additional, $header);
+        } else {
+            $response = $this->shirtOrderRepo->create($tag, $additional);
+        }
+
+        return $response;
     }
 }
